@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whack-a-Mole Game</title>
+    <style>
+        body {
+            background-color: #f0f0f0; /* Light gray background */
+            font-family: 'Arial', sans-serif; /* More appealing font */
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Center content horizontally */
+            justify-content: center; /* Center content vertically */
+            min-height: 100vh;
+            margin: 0;
+            text-align: center; /* Center text for h1, score, etc. */
+        }
+
+        #score-display, #timer-display {
+            font-size: 1.5em; /* Larger font for score and timer */
+            margin-bottom: 10px; /* Space below score/timer */
+            color: #333;
+        }
+        #timer-display {
+            margin-bottom: 20px; /* More space below timer */
+        }
+
+
+        button {
+            padding: 10px 20px; /* More touch-friendly padding */
+            background-color: #4CAF50; /* Green background */
+            color: white;
+            border: none;
+            border-radius: 5px; /* Rounded corners */
+            font-size: 1em; /* Larger font size */
+            margin: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover:not(:disabled) {
+            background-color: #45a049; /* Darker green on hover */
+        }
+
+        #reset-button {
+            background-color: #f44336; /* Red background for reset */
+        }
+
+        #reset-button:hover:not(:disabled) {
+            background-color: #da190b; /* Darker red on hover */
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        #game-area {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* Use fractional units for responsiveness */
+            grid-gap: 15px; /* Slightly larger gap */
+            width: 80%; /* Responsive width, max-width can be added */
+            max-width: 450px; /* Max width for larger screens */
+            margin-top: 20px;
+            background-color: #cccccc; /* Light gray background for game area */
+            border: 2px solid #999999; /* Border for game area */
+            padding: 15px;
+            border-radius: 10px; /* Rounded corners for game area */
+        }
+
+        .mole-hole {
+            width: 100%; /* Fill the grid cell */
+            padding-bottom: 100%; /* Maintain aspect ratio 1:1 */
+            background-color: #654321; /* Brown color for holes */
+            border: 2px solid #543210;
+            border-radius: 50%; /* Make them circular */
+            position: relative; /* For positioning the mole inside */
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5); /* Inner shadow for depth */
+            display: flex; /* For centering mole, if needed as a separate element */
+            justify-content: center;
+            align-items: center;
+            overflow: hidden; /* Ensures the .mole (if it was a child) doesn't visually spill */
+            cursor: pointer; /* Indicate holes are clickable */
+        }
+
+        .mole {
+            background-color: #FFD700; /* Bright gold color for the mole */
+            /* This class is added to mole-hole. If mole was a child element, styles would be different. */
+        }
+    </style>
+</head>
+<body>
+    <h1>Whack-a-Mole!</h1>
+    <div id="score-display">Score: 0</div>
+    <div id="timer-display">Time: 30</div>
+    <div> 
+        <button id="start-button">Start Game</button>
+        <button id="reset-button">Reset Game</button>
+    </div>
+    <div id="game-area">
+        <div class="mole-hole"></div>
+        <div class="mole-hole"></div>
+        <div class="mole-hole"></div>
+        <div class="mole-hole"></div>
+        <div class="mole-hole"></div>
+        <div class="mole-hole"></div>
+        <div class="mole-hole"></div>
+        <div class="mole-hole"></div>
+        <div class="mole-hole"></div>
+    </div>
+
+    <script>
+        // DOM References
+        const scoreDisplay = document.getElementById('score-display');
+        const timerDisplay = document.getElementById('timer-display');
+        const startButton = document.getElementById('start-button');
+        const resetButton = document.getElementById('reset-button');
+        const moleHoles = document.querySelectorAll('.mole-hole');
+
+        // Game Variables
+        let score = 0;
+        const gameDuration = 30; // Seconds
+        let currentTime = gameDuration;
+        let moleInterval = 1500; // Time in ms for mole appearance, can be adjusted
+        
+        let moleTimerId = null; 
+        let hideMoleTimeoutId = null; 
+        let gameTimerId = null; 
+
+        let activeMoleHole = null; 
+        let gameInProgress = false;
+
+
+        function updateScoreDisplay() {
+            scoreDisplay.textContent = "Score: " + score;
+        }
+
+        function updateTimerDisplay() {
+            timerDisplay.textContent = "Time: " + currentTime;
+        }
+
+        function hideMole() {
+            if (activeMoleHole) {
+                activeMoleHole.classList.remove('mole');
+                activeMoleHole = null;
+            }
+            if (hideMoleTimeoutId) {
+                clearTimeout(hideMoleTimeoutId); 
+                hideMoleTimeoutId = null;
+            }
+        }
+
+        function showMole() {
+            if (!gameInProgress) return; // Don't show moles if game is not running
+
+            hideMole(); 
+
+            const randomIndex = Math.floor(Math.random() * moleHoles.length);
+            const selectedHole = moleHoles[randomIndex];
+
+            selectedHole.classList.add('mole');
+            activeMoleHole = selectedHole;
+
+            const randomHideTime = Math.random() * (1200 - 600) + 600; // Mole visible for 0.6 to 1.2 seconds
+            hideMoleTimeoutId = setTimeout(hideMole, randomHideTime);
+        }
+        
+        function countdown() {
+            currentTime--;
+            updateTimerDisplay();
+            if (currentTime <= 0) {
+                gameOver();
+            }
+        }
+
+        function startGame() {
+            if (gameInProgress) return; // Prevent starting multiple games
+            gameInProgress = true;
+
+            score = 0;
+            updateScoreDisplay();
+            
+            currentTime = gameDuration;
+            updateTimerDisplay();
+
+            startButton.disabled = true;
+            resetButton.disabled = false;
+
+            hideMole(); // Clear any mole from a previous game state
+
+            if (moleTimerId) clearInterval(moleTimerId);
+            moleTimerId = setInterval(showMole, moleInterval); 
+
+            if (gameTimerId) clearInterval(gameTimerId);
+            gameTimerId = setInterval(countdown, 1000);
+        }
+
+        function resetGame() {
+            gameInProgress = false;
+            
+            if (moleTimerId) clearInterval(moleTimerId);
+            moleTimerId = null;
+            
+            if (gameTimerId) clearInterval(gameTimerId);
+            gameTimerId = null;
+            
+            hideMole();
+
+            startButton.disabled = false;
+            resetButton.disabled = true;
+            
+            currentTime = gameDuration; // Reset timer display for next game
+            updateTimerDisplay();
+            score = 0; // Reset score display for next game
+            updateScoreDisplay();
+            // Optional: Display a message like "Game Reset!"
+        }
+
+        function gameOver() {
+            gameInProgress = false;
+
+            if (moleTimerId) clearInterval(moleTimerId);
+            moleTimerId = null;
+
+            if (gameTimerId) clearInterval(gameTimerId);
+            gameTimerId = null;
+
+            hideMole();
+
+            startButton.disabled = false;
+            resetButton.disabled = true; // Or keep enabled if it acts as a "play again" reset
+
+            alert("Game Over! Your final score: " + score);
+            
+            // Reset displays for a potential new game
+            currentTime = gameDuration;
+            score = 0;
+            updateTimerDisplay();
+            updateScoreDisplay();
+        }
+
+        function handleWhack(event) {
+            if (!gameInProgress) return; // Only allow whacking if game is in progress
+
+            if (event.target === activeMoleHole && event.target.classList.contains('mole')) {
+                score++;
+                updateScoreDisplay();
+                hideMole(); 
+
+                // Optional: make next mole appear slightly faster after a successful whack
+                if (moleTimerId) clearInterval(moleTimerId);
+                showMole(); // Show a new mole right away
+                moleTimerId = setInterval(showMole, moleInterval);
+            }
+        }
+
+        // Add event listeners
+        moleHoles.forEach(hole => {
+            hole.addEventListener('click', handleWhack);
+        });
+        startButton.addEventListener('click', startGame);
+        resetButton.addEventListener('click', resetGame);
+
+        // Initial setup
+        updateScoreDisplay(); 
+        updateTimerDisplay();
+        resetButton.disabled = true; // Reset button disabled initially
+
+    </script>
+</body>
+</html>
