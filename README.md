@@ -1,5 +1,9 @@
 # Whack-a-Mole Game
 
+## Play the Game Online
+You can play the game directly in your browser by visiting:
+[Whack-a-Mole Game Link](https://raw.githack.com/rumple/jules-bus/main/index.html)
+
 A simple browser-based Whack-a-Mole game implemented in a single HTML file using HTML, CSS, and JavaScript.
 
 ## How to Play
