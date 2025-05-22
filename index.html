@@ -85,8 +85,47 @@
         }
 
         .mole {
-            background-color: #FFD700; /* Bright gold color for the mole */
+            /* background-color: #FFD700; */ /* Bright gold color for the mole - REMOVED */
             /* This class is added to mole-hole. If mole was a child element, styles would be different. */
+            position: relative; /* Needed for pseudo-elements */
+        }
+
+        .mole::before { /* Body + Eyes */
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 40px; 
+            height: 30px; /* Main body block */
+            background-color: #5D4037; /* Dark Brown mole color */
+            border-radius: 15px 15px 10px 10px; /* Rounded top, flatter bottom for body */
+            transform: translate(-50%, -50%); /* Center the body */
+            z-index: 10;
+            /* Eyes: Two small black dots using box-shadow */
+            /* Shadow: X-offset Y-offset Blur Spread Color */
+            /* Eyes are 4x4 "pixels". Spread of 2px on a 0-width/0-height shadow base. */
+            box-shadow: 
+                -8px -5px 0 2px #111111,  /* Left eye */
+                 8px -5px 0 2px #111111;  /* Right eye */
+        }
+
+        .mole::after { /* Snout */
+            content: '';
+            position: absolute;
+            top: 50%; /* Relative to body's center */
+            left: 50%;
+            width: 18px; /* Snout width */
+            height: 14px; /* Snout height */
+            background-color: #A1887F; /* Lighter Brown for snout */
+            border-radius: 7px; /* Rounded snout */
+            /* Position snout: centered horizontally, and pushed down from body center. */
+            /* Body height is 30px (Y from -15 to +15). Snout height 14px. */
+            /* Snout center Y relative to body center: 0.45 * (30px/2) = 0.45 * 15 = 6.75px. No, it's 45% of its own height or body's? */
+            /* transform: translate(-50%, Y-Translation-From-Body-Center); */
+            /* Body center is Y=0. Body bottom edge is Y=+15. Snout half-height is 7px. */
+            /* To place snout center at Y=+10px from body center: */
+            transform: translate(-50%, 10px); /* Snout center shifted 10px down from body center */
+            z-index: 11; /* Snout above body */
         }
     </style>
 </head>
