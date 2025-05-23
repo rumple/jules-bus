@@ -104,6 +104,14 @@
         <h2>Settings</h2>
         <label for="grid-size-input">Grid Size (e.g., 3 for 3x3):</label>
         <input type="number" id="grid-size-input" min="2" max="6" value="3">
+        
+        <div>
+            <label>Game Duration (seconds):</label><br>
+            <input type="radio" id="duration-10" name="game-duration" value="10"> <label for="duration-10">10</label>
+            <input type="radio" id="duration-30" name="game-duration" value="30" checked> <label for="duration-30">30</label>
+            <input type="radio" id="duration-60" name="game-duration" value="60"> <label for="duration-60">60</label>
+        </div>
+        
         <button id="save-settings-button">Save Settings</button>
         <button id="cancel-settings-button">Cancel Settings</button>
     </div>
@@ -124,10 +132,11 @@
         const gridSizeInput = document.getElementById('grid-size-input');
         const saveSettingsButton = document.getElementById('save-settings-button');
         const cancelSettingsButton = document.getElementById('cancel-settings-button');
+        const gameDurationRadios = document.querySelectorAll('input[name="game-duration"]');
 
         // Game Variables
         let score = 0;
-        const gameDuration = 30; // Seconds
+        let gameDuration = 30; // Default seconds, will be updated from localStorage
         let currentTime = gameDuration;
         let moleInterval = 1500; // Time in ms for mole appearance, can be adjusted
         const gameArea = document.getElementById('game-area'); // Added reference for game-area
@@ -312,12 +321,21 @@
                 alert(`Invalid grid size. Please enter a number between ${minSize} and ${maxSize}.`);
                 return;
             }
-
             localStorage.setItem('whackAMoleGridSize', newSize);
-            // alert('Settings saved! Grid will update on next game reset or page load.'); // Alert moved after grid creation
+
+            // Handle Game Duration Setting
+            let selectedDuration = 30; // Default
+            gameDurationRadios.forEach(radio => {
+                if (radio.checked) {
+                    selectedDuration = parseInt(radio.value);
+                }
+            });
+            localStorage.setItem('whackAMoleGameDuration', selectedDuration);
+            gameDuration = selectedDuration; // Update active game duration
+
             createGrid(newSize); // Create grid with new size
-            resetGame(); // Reset game state
-            alert('Settings saved and grid updated!'); // New alert message
+            resetGame(); // Reset game state, which will now use the new gameDuration
+            alert('Settings saved! Changes will apply on the next game start/reset.');
             closeSettingsDialog();
         }
 
@@ -335,6 +353,21 @@
         const initialGridSize = parseInt(localStorage.getItem('whackAMoleGridSize')) || 3;
         gridSizeInput.value = initialGridSize; // Set the input field to the loaded/default size
         createGrid(initialGridSize); // Create the initial grid
+
+        // Load saved game duration
+        const savedGameDuration = localStorage.getItem('whackAMoleGameDuration');
+        if (savedGameDuration && ['10', '30', '60'].includes(savedGameDuration)) {
+            gameDuration = parseInt(savedGameDuration);
+            document.getElementById(`duration-${savedGameDuration}`).checked = true;
+        } else {
+            // Ensure 30s is default if no valid saved value
+            document.getElementById('duration-30').checked = true;
+            gameDuration = 30;
+        }
+        // Update timer display with loaded duration for consistency before game starts
+        currentTime = gameDuration;
+        updateTimerDisplay();
+
 
     </script>
 </body>
